@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  vllm:
+    image: vllm/vllm-openai:nightly-aarch64
+    container_name: vllm-openai
+    command:
+      - --model
+      - deepseek-ai/DeepSeek-OCR          # 你可改成任何HF可用模型（注意：OCR模型通常不是聊天LLM）
+      - --dtype
+      - float16
+      - --tensor-parallel-size
+      - "1"
+      - --download-dir
+      - /data/hf
+    ports:
+      - "8000:8000"                       # OpenAI 兼容 API
+    environment:
+      - TRITON_PTXAS_PATH=/opt/ptxas      # 使用宿主机的新 ptxas（方案B）
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    volumes:
+      - ./data:/data                      # 模型/缓存目录
+      - /usr/local/cuda/bin/ptxas:/opt/ptxas:ro  # 映射宿主机 ptxas
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    shm_size: "8g"
+    restart: unless-stopped
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    ports:
+      - "3000:8080"
+    environment:
+      # 关键：在容器网络里用 vllm 服务名访问，而不是 0.0.0.0
+      - OPENAI_API_BASE_URL=http://vllm:8000/v1
+      # 很多前端需要一个“看起来像Key”的字符串；vLLM默认不校验此值
+      - OPENAI_API_KEY=sk-noop
+      # 如需在 UI 里预置默认模型，可增加（可选）：
+      # - OPENAI_API_DEFAULT_MODEL=Qwen/Qwen2.5-7B-Instruct
+    volumes:
+      - open-webui:/app/backend/data
+    depends_on:
+      - vllm
+    restart: always
+
+volumes:
+  open-webui:
