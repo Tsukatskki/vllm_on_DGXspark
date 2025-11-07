@@ -14,6 +14,9 @@ docker run --rm --gpus all nvidia/cuda:12.4.1-runtime-ubuntu22.04 nvidia-smi
 ## Step 3: Get a Token from HuggingFace
 - a HuggingFace token is needed for downloading models.
 - fill in '.env' with the HuggingFace token.
+'''
+HUGGING_FACE_HUB_TOKEN=fill_in_your_hf_token_here
+'''
 ## Step 4: Build with docker
 '''
 docker compose up
