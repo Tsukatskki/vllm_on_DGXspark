@@ -3,8 +3,8 @@
 # HTTP requests
 requests>=2.31.0
 
-# PDF to image conversion
-pdf2image>=1.17.0
+# PDF processing and conversion
+PyMuPDF>=1.23.0
 
-# Image processing (required by pdf2image)
+# Image processing
 Pillow>=10.0.0

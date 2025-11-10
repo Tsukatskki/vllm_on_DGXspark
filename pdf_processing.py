@@ -3,8 +3,9 @@ import base64
 import requests
 import json
 from pathlib import Path
-from pdf2image import convert_from_path
+import fitz  # PyMuPDF
 from io import BytesIO
+from PIL import Image
 
 # 配置
 api = "your vllm devtunnel URL"
@@ -15,7 +16,23 @@ output_dir = "output_folder"
 def pdf_to_images(pdf_path):
     """将PDF转换为图片列表"""
     try:
-        images = convert_from_path(pdf_path, dpi=200)
+        # 使用PyMuPDF打开PDF
+        pdf_document = fitz.open(pdf_path)
+        images = []
+        
+        # 遍历每一页
+        for page_num in range(len(pdf_document)):
+            page = pdf_document[page_num]
+            # 设置缩放矩阵以获得更高分辨率 (200 DPI相当于zoom=2.78)
+            zoom = 2.78  # 200 DPI / 72 DPI ≈ 2.78
+            mat = fitz.Matrix(zoom, zoom)
+            pix = page.get_pixmap(matrix=mat)
+            
+            # 转换为PIL Image
+            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+            images.append(img)
+        
+        pdf_document.close()
         return images
     except Exception as e:
         print(f"PDF转换失败: {e}")
