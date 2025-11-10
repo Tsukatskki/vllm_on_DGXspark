@@ -39,6 +39,10 @@ devtunnel host vllm-webui
 ```
 
 # Use DeepSeek-OCR in vLLM
+- [recommended] create a new conda environment and run :
+```
+pip install -r requirements.txt
+```
 - fill in api, port, input, output in 'pdf_processing.py'
 ```
 python pdf_processing.py
